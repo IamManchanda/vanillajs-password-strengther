@@ -1,0 +1,102 @@
+const strengther = document.getElementById("strengther");
+const passwordInput = document.getElementById("password-input");
+const passwordCheck = document.getElementById("password-check");
+
+function calculatePasswordStrength(password) {
+  const assessment = [];
+  assessment.push(lengthAssessment(password));
+  assessment.push(lowercaseAssessment(password));
+  assessment.push(uppercaseAssessment(password));
+  assessment.push(numberAssessment(password));
+  assessment.push(specialCharacterAssessment(password));
+  assessment.push(repeatCharactersAssessment(password));
+  return assessment;
+}
+
+function lengthAssessment(password) {
+  const length = password.length;
+
+  if (length <= 5) {
+    return {
+      pwdCheck: "Password is too short",
+      strengthLost: 40,
+    };
+  }
+
+  if (length <= 10) {
+    return {
+      pwdCheck: "Password could be longer",
+      strengthLost: 15,
+    };
+  }
+}
+
+function lowercaseAssessment(password) {
+  return characterTypeAssessment(password, /[a-z]/g, "lowercase characters");
+}
+
+function uppercaseAssessment(password) {
+  return characterTypeAssessment(password, /[A-Z]/g, "uppercase characters");
+}
+
+function numberAssessment(password) {
+  return characterTypeAssessment(password, /[0-9]/g, "numbers");
+}
+
+function specialCharacterAssessment(password) {
+  return characterTypeAssessment(
+    password,
+    /[^0-9a-zA-Z\s]/g,
+    "special characters",
+  );
+}
+
+function characterTypeAssessment(password, regX, assessmentType) {
+  const characterMatch = password.match(regX) || [];
+
+  if (characterMatch.length === 0) {
+    return {
+      pwdCheck: `Password has no ${assessmentType}`,
+      strengthLost: 20,
+    };
+  }
+
+  if (characterMatch.length <= 2) {
+    return {
+      pwdCheck: `Password must have more ${assessmentType}`,
+      strengthLost: 5,
+    };
+  }
+}
+
+function repeatCharactersAssessment(password) {
+  const repeatCharMatch = password.match(/(.)\1/g) || [];
+
+  if (repeatCharMatch.length > 0) {
+    return {
+      pwdCheck: "Password has repeat characters",
+      strengthLost: repeatCharMatch.length * 10,
+    };
+  }
+}
+
+function updateStrengther() {
+  const assessments = calculatePasswordStrength(passwordInput.value);
+
+  let strength = 100;
+  passwordCheck.innerHTML = "";
+
+  assessments.forEach((assessment) => {
+    if (assessment == null) {
+      return;
+    }
+
+    strength -= assessment.strengthLost;
+    const pwdCheckEl = document.createElement("p");
+    pwdCheckEl.innerHTML = assessment.pwdCheck;
+    passwordCheck.appendChild(pwdCheckEl);
+  });
+  strengther.style.setProperty("--strength-amount", strength);
+}
+
+passwordInput.addEventListener("input", updateStrengther);
